@@ -1,0 +1,22 @@
+name: Test Actions Dora
+
+on:
+  push:
+    branches:
+    - main
+    - release/*
+
+jobs:
+  my_job:
+    name: deploy to staging
+    runs-on: ubuntu-22.04
+    steps:
+      - name: DORA lead time for changes
+        uses: DeveloperMetrics/lead-time-for-changes@v1.2.11
+        with:
+          workflows: 'CI/CD'
+          owner-repo: 'facebook/docusaurus'
+          default-branch: 'main'
+          number-of-days: 30
+              
+            
