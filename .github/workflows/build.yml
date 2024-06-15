@@ -1,13 +1,28 @@
 name: Test Actions Dora
 
 on:
-  push:
-    branches:
-    - main
-    - release/*
+  workflow_dispatch:
+   inputs:
+    repository:
+      description: 'Comma-separated list of repositories to analyze (eg. port-labs/self-service-actions)'
+      required: true
+      default: 'facebook/docusaurus'
+    timeframe:
+      description: 'Last X weeks'
+      required: true
+      default: "7"
+    workflow:
+      description: The name of the workflows to process. Multiple workflows can be separated by a comma (,).
+      required: true
+      default: "Argos CI, Canary Release"
+    port_payload:
+      required: false
+      description: Port's payload, including details for who triggered the action and
+        general context (blueprint, run id, etc...)
+      type: string
 
 jobs:
-  my_job:
+ lead-time:
     name: deploy to staging
     runs-on: ubuntu-22.04
     steps:
@@ -15,8 +30,28 @@ jobs:
         uses: DeveloperMetrics/lead-time-for-changes@v1.2.11
         with:
           workflows: "Argos CI, Canary Release"
-          owner-repo: 'facebook/docusaurus'
+          owner-repo: "${{ github.event.inputs.repository }}"
           default-branch: 'main'
           number-of-days: 30
+
+      - name: Run DORA Lead Time for Changes
+        id: lead_time_for_changes
+        shell: pwsh
+        run: |
+          $scriptPath = Join-Path ${{ github.workspace }} "src/leadtimeforchanges.ps1"
+          chmod +x $scriptPath
+          $output = & pwsh -File $scriptPath -ownerRepo "${{ github.event.inputs.repository }}" -workflows "${{ inputs.workflow }}" -branch "main" -numberOfDays 30 -commitCountingMethod "last" -patToken ""
+          $jsonLine = $output | Select-String "###JSON_START###" -Context 0,1 | ForEach-Object { $_.Context.PostContext }
+          echo "::set-output name=jsonResult::$jsonLine"
+
+      - name: Set Lead Time for Changes Results
+        run: |
+          results='${{ steps.lead_time_for_changes.outputs.jsonResult }}'
+          echo "Lead Time for Changes Results: $results"
+          echo "LEAD_TIME_FOR_CHANGES_IN_HOURS=$(echo $results | jq -r '.LeadTimeForChangesInHours')" >> $GITHUB_ENV
+          echo "LEAD_TIME_RATING=$(echo $results | jq -r '.Rating')" >> $GITHUB_ENV
+          echo "WORKFLOW_AVERAGE_TIME_DURATION=$(echo $results | jq -r '.WorkflowAverageTimeDuration')" >> $GITHUB_ENV
+          echo "PR_AVERAGE_TIME_DURATION=$(echo $results | jq -r '.PRAverageTimeDuration')" >> $GITHUB_ENV
+        shell: bash
               
             
