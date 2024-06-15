@@ -26,6 +26,15 @@ jobs:
     name: deploy to staging
     runs-on: ubuntu-22.04
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Convert Weeks to Days
+        run: |
+          days=$(( ${{ github.event.inputs.timeframe }} * 7 ))
+          echo "TIMEFRAME_IN_DAYS=$days" >> $GITHUB_ENV
+        shell: bash
+        
       - name: DORA lead time for changes
         uses: DeveloperMetrics/lead-time-for-changes@v1.2.11
         with:
