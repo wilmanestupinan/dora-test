@@ -14,7 +14,7 @@ jobs:
       - name: DORA lead time for changes
         uses: DeveloperMetrics/lead-time-for-changes@v1.2.11
         with:
-          workflows: 'Canary Release, Argos CI'
+          workflows: 'Canary Release, CodeQL'
           owner-repo: 'facebook/docusaurus'
           default-branch: 'main'
           number-of-days: 30
