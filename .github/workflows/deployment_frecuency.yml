@@ -31,15 +31,6 @@ jobs:
           owner-repo: "${{ inputs.repository }}"
           pat-token: "${{ secrets.PATTOKEN }}"
 
-      - name: DORA lead time for changes
-        uses: DeveloperMetrics/lead-time-for-changes@v1.2.11
-        with:
-          workflows: "Argos CI, Canary Release"
-          owner-repo: "${{ github.event.inputs.repository }}"
-          default-branch: 'main'
-          number-of-days: 30
-          pat-token: ${{ secrets.PATTOKEN }}
-
       - name: Run DORA Deployment Frequency 
         id: deploymement_frequency
         shell: pwsh
