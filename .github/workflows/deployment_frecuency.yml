@@ -1,0 +1,63 @@
+name: Deployment Frecuency
+
+on:
+  workflow_dispatch:
+   inputs:
+    repository:
+      description: 'Comma-separated list of repositories to analyze (eg. port-labs/self-service-actions)'
+      required: true
+      default: 'facebook/docusaurus'
+    timeframe:
+      description: 'Last X weeks'
+      required: true
+      default: "7"
+    workflow:
+      description: The name of the workflows to process. Multiple workflows can be separated by a comma (,).
+      required: true
+      default: "Argos CI, Canary Release"
+
+jobs:
+ lead-time:
+    name: deploy to staging
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Test elite repo with PAT Token
+        uses: DeveloperMetrics/deployment-frequency@main
+        with:
+          workflows: 'CI/CD'
+          owner-repo: "${{ inputs.repository }}"
+          pat-token: "${{ secrets.PATTOKEN }}"
+
+      - name: DORA lead time for changes
+        uses: DeveloperMetrics/lead-time-for-changes@v1.2.11
+        with:
+          workflows: "Argos CI, Canary Release"
+          owner-repo: "${{ github.event.inputs.repository }}"
+          default-branch: 'main'
+          number-of-days: 30
+          pat-token: ${{ secrets.PATTOKEN }}
+
+      - name: Run DORA Deployment Frequency 
+        id: deploymement_frequency
+        shell: pwsh
+        run: |
+            $scriptPath = Join-Path ${{ github.workspace }} "src/deploymentfrequency.ps1"
+            chmod +x $scriptPath
+            $output = & pwsh -File $scriptPath -ownerRepo "${{ inputs.repository }}" -workflows "${{ inputs.workflow }}" -branch "main" -numberOfDays 30 -patToken "${{ secrets.PATTOKEN }}"
+            $jsonLine = $output | Select-String "###JSON_START###" -Context 0,1 | ForEach-Object { $_.Context.PostContext }
+            echo "::set-output name=jsonResult::$jsonLine"
+  
+      - name: Set Deployment Frequency Results
+        run: |
+          results='${{ steps.deploymement_frequency.outputs.jsonResult }}'
+          echo "Lead Time for Changes Results: $results"
+          echo "TOTAL_DEPLOYMENTS=$(echo $results | jq -r '.TotalDeployments')" >> $GITHUB_ENV
+          echo "DEPLOYMENT_FREQUENCY_RATING=$(echo $results | jq -r '.Rating')" >> $GITHUB_ENV
+          echo "NUMBER_OF_UNIQUE_DEPLOYMENTS=$(echo $results | jq -r '.NumberOfUniqueDeploymentDays')" >> $GITHUB_ENV
+          echo "DEPLOYMENT_FREQUENCY=$(echo $results | jq -r '.DeploymentFrequency')" >> $GITHUB_ENV
+        shell: bash
+            
+            
