@@ -29,12 +29,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       
-      - name: Convert Weeks to Days
-        run: |
-          days=$(( ${{ github.event.inputs.timeframe }} * 7 ))
-          echo "TIMEFRAME_IN_DAYS=$days" >> $GITHUB_ENV
-        shell: bash
-        
+      # - name: Convert Weeks to Days
+      #   run: |
+      #     days=$(( ${{ github.event.inputs.timeframe }} * 7 ))
+      #     echo "TIMEFRAME_IN_DAYS=$days" >> $GITHUB_ENV
+      #   shell: bash
+
       - name: DORA lead time for changes
         uses: DeveloperMetrics/lead-time-for-changes@v1.2.11
         with:
@@ -42,6 +42,7 @@ jobs:
           owner-repo: "${{ github.event.inputs.repository }}"
           default-branch: 'main'
           number-of-days: 30
+          pat-token: ${{ secrets.PATTOKEN }}
 
       - name: Run DORA Lead Time for Changes
         id: lead_time_for_changes
