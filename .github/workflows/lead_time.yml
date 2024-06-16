@@ -52,7 +52,7 @@ jobs:
           chmod +x $scriptPath
           $output = & pwsh -File $scriptPath -ownerRepo "${{ github.event.inputs.repository }}" -workflows "${{ inputs.workflow }}" -branch "main" -numberOfDays 30 -commitCountingMethod "last" -patToken "${{ secrets.PATTOKEN }}"
           $jsonLine = $output | Select-String "###JSON_START###" -Context 0,1 | ForEach-Object { $_.Context.PostContext }
-          echo "::set-output name=jsonResult::$jsonLine"
+          echo "name=jsonResult::$jsonLine" >> $GITHUB_OUTPUT
 
       - name: Set Lead Time for Changes Results
         run: |
