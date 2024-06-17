@@ -44,7 +44,7 @@ jobs:
       - name: Set Deployment Frequency Results
         run: |
           results='${{ steps.deploymement_frequency.outputs.jsonResult }}'
-          echo "Lead Time for Changes Results: $results"
+          echo "Deployment frecuency Results: $results"
           echo "TOTAL_DEPLOYMENTS=$(echo $results | jq -r '.TotalDeployments')" >> $GITHUB_ENV
           echo "DEPLOYMENT_FREQUENCY_RATING=$(echo $results | jq -r '.Rating')" >> $GITHUB_ENV
           echo "NUMBER_OF_UNIQUE_DEPLOYMENTS=$(echo $results | jq -r '.NumberOfUniqueDeploymentDays')" >> $GITHUB_ENV
